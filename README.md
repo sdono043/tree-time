@@ -10,6 +10,7 @@ The demos show what sets it apart from a typical local tree service, using seede
 | `/` | Short landing page for the business |
 | `/quote` | **Instant quote estimator.** Service, tree size, access, hazards, stumps, cleanup, storm flag and photo upload produce a live price range and a booking request |
 | `/estimator` | **Photo job estimator (GM tool).** Upload customer photos; Claude reads the job (trees, size ranges, condition, hazards, power lines, access, drop zone) and the rate card prices it: method, crew, hours, equipment, disposal, permit and licensing flags. Every field the AI reads can be corrected and the quote recalculates |
+| `/estimates` | **Saved estimates (GM tool).** Every photo analysis is saved automatically with its photos, customer, the AI's read, the GM's corrections and the quote. Track status (draft, sent, won, lost) and the final price; the detail page compares the AI-only quote, the corrected quote and what was actually charged |
 | `/dashboard` | **Owner dashboard.** Jobs/week, close rate, average ticket, crew utilization, plan cash, Year 1 revenue vs. cost, projected cash balance, lead sources, recent quote requests and capital uses |
 
 Quote requests submitted on `/quote` are saved in the browser (localStorage) and appear first under "Recent quote requests" on the dashboard. Nothing is sent anywhere.
@@ -35,7 +36,9 @@ Photo analysis needs two environment variables, set in Vercel under Project → 
 | `ANTHROPIC_API_KEY` | API key from console.anthropic.com. Each analysis costs a few cents. |
 | `GM_ACCESS_CODE` | Any passphrase. The GM enters it on the estimator page, so visitors to the public site can't spend API credit. |
 
-Without both, the page runs in demo mode with four saved sample jobs. The permit and licensing flags are prompts to check, not legal advice.
+Without both, the page runs in demo mode with four saved sample jobs.
+
+Saved estimates live in a **private Vercel Blob store** connected to the project (Storage tab), which adds `BLOB_READ_WRITE_TOKEN` (or `BLOB_STORE_ID` for OIDC). Layout: `estimates/<id>/record.json` plus `estimates/<id>/photo-<n>.jpg`. Photos are served only through `/api/estimates/<id>/photos/<n>` with the GM access code. Without a store, analyses still work but aren't saved. The permit and licensing flags are prompts to check, not legal advice.
 
 ## Run it
 
