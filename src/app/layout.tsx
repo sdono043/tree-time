@@ -20,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="ml-auto flex items-center gap-x-4 gap-y-1 flex-wrap justify-end text-sm">
               <Link href="/quote" className="text-ink-2 hover:text-ink">Instant quote</Link>
               <Link href="/estimator" className="text-ink-2 hover:text-ink">Job estimator</Link>
+              <Link href="/estimates" className="text-ink-2 hover:text-ink">Estimates</Link>
               <Link href="/dashboard" className="text-ink-2 hover:text-ink">Owner dashboard</Link>
             </div>
           </nav>

@@ -3,6 +3,10 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { NextResponse } from "next/server";
 import { JobAssessment } from "@/lib/assessment";
 import { ASSESS_SYSTEM_PROMPT } from "@/lib/assess-prompt";
+import { Customer, EMPTY_CUSTOMER, Options, snapshotQuote, type EstimateRecord } from "@/lib/estimate-record";
+import { savePhoto, saveRecord, storageConfigured } from "@/lib/estimate-store";
+import { requireGm } from "@/lib/gm-auth";
+import { DEFAULT_OPTIONS } from "@/lib/job-estimator";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -15,15 +19,23 @@ type ImageType = (typeof IMAGE_TYPES)[number];
 const error = (status: number, message: string, extra: Record<string, unknown> = {}) =>
   NextResponse.json({ error: message, ...extra }, { status });
 
+function parseJson<T>(value: FormDataEntryValue | null, schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } }): T | null {
+  if (typeof value !== "string") return null;
+  try {
+    const r = schema.safeParse(JSON.parse(value));
+    return r.success ? r.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   // Both settings are required so a public deployment can't be used to spend API credit.
-  const accessCode = process.env.GM_ACCESS_CODE;
-  if (!process.env.ANTHROPIC_API_KEY || !accessCode) {
+  if (!process.env.ANTHROPIC_API_KEY || !process.env.GM_ACCESS_CODE) {
     return error(503, "Photo analysis isn't set up on this deployment yet. Load a sample job to try the estimator.", { demo: true });
   }
-  if (req.headers.get("x-gm-access-code") !== accessCode) {
-    return error(401, "Wrong or missing GM access code.");
-  }
+  const denied = requireGm(req);
+  if (denied) return denied;
 
   let form: FormData;
   try {
@@ -38,8 +50,10 @@ export async function POST(req: Request) {
   if (photos.some((p) => !IMAGE_TYPES.includes(p.type as ImageType))) return error(400, "Photos must be JPEG, PNG, WebP or GIF.");
   if (photos.reduce((a, p) => a + p.size, 0) > MAX_TOTAL_BYTES) return error(413, "Photos are too large in total; use fewer or smaller photos.");
 
-  const service = String(form.get("service") ?? "removal");
   const notes = String(form.get("notes") ?? "").slice(0, 2000);
+  const options = parseJson(form.get("options"), Options) ?? DEFAULT_OPTIONS;
+  const customer = parseJson(form.get("customer"), Customer) ?? EMPTY_CUSTOMER;
+  const service = options.service;
 
   const images = await Promise.all(
     photos.map(async (p) => ({
@@ -77,10 +91,41 @@ export async function POST(req: Request) {
     if (response.stop_reason === "max_tokens" || !response.parsed_output) {
       return error(502, "The assessment came back incomplete. Try again.");
     }
+    const assessment = response.parsed_output;
+    let saved: { id: string } | { error: string } | null = null;
+    if (storageConfigured()) {
+      // Save the analysis right away so a paid-for read is never lost to a closed tab.
+      try {
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const stored = await Promise.all(photos.map((p, i) => savePhoto(id, i, p)));
+        const record: EstimateRecord = {
+          id,
+          createdAt: now,
+          updatedAt: now,
+          customer,
+          notes,
+          options,
+          aiAssessment: assessment,
+          assessment,
+          quote: snapshotQuote(assessment, options),
+          status: "draft",
+          finalPrice: null,
+          photos: stored,
+          model: response.model,
+        };
+        await saveRecord(record);
+        saved = { id };
+      } catch (e) {
+        console.error("assess: saving estimate failed", e);
+        saved = { error: "The analysis worked but couldn't be saved to estimate history. Copy what you need before leaving the page." };
+      }
+    }
     return NextResponse.json({
-      assessment: response.parsed_output,
+      assessment,
       model: response.model,
       usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
+      saved,
     });
   } catch (e) {
     if (e instanceof Anthropic.AuthenticationError) return error(503, "The Anthropic API key on this deployment is invalid.");

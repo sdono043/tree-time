@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SAMPLE_JOBS } from "@/lib/sample-jobs";
+import { blobModule, blobs } from "@/test/blob-mock";
+
+vi.mock("@vercel/blob", () => blobModule);
 
 const parse = vi.fn();
 vi.mock("@anthropic-ai/sdk", async (importOriginal) => {
@@ -15,7 +18,8 @@ const { POST } = await import("./route");
 function request({ code = "secret", photos = 1, type = "image/jpeg" } = {}) {
   const form = new FormData();
   for (let i = 0; i < photos; i++) form.append("photos", new File([new Uint8Array([1, 2, 3])], `p${i}.jpg`, { type }));
-  form.append("service", "removal");
+  form.append("options", JSON.stringify({ service: "trim", locality: "Henrico", grindStumps: false, haulDebris: true, historicDistrict: false }));
+  form.append("customer", JSON.stringify({ name: "Pat Lee", phone: "", email: "", address: "12 Grove Ave" }));
   form.append("notes", "Gate is 4 ft wide");
   return new Request("http://localhost/api/assess", { method: "POST", body: form, headers: { "x-gm-access-code": code } });
 }
@@ -65,6 +69,33 @@ describe("POST /api/assess", () => {
     const content = params.messages[0].content;
     expect(content.filter((b: { type: string }) => b.type === "image")).toHaveLength(2);
     expect(content.at(-1).text).toContain("Gate is 4 ft wide");
+    expect(content.at(-1).text).toContain("Requested work: trim");
+  });
+
+  it("saves the analysis and photos when a blob store is connected", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "test";
+    blobs.clear();
+    parse.mockResolvedValue({ stop_reason: "end_turn", parsed_output: SAMPLE_JOBS[0].assessment, model: "claude-opus-5-5", usage: { input_tokens: 1, output_tokens: 1 } });
+    const body = await (await POST(request({ photos: 2 }))).json();
+    delete process.env.BLOB_READ_WRITE_TOKEN;
+    expect(body.saved.id).toMatch(/^[0-9a-f-]{36}$/);
+    const record = JSON.parse(new TextDecoder().decode(blobs.get(`estimates/${body.saved.id}/record.json`)!.body));
+    expect(record).toMatchObject({ status: "draft", customer: { name: "Pat Lee" }, options: { service: "trim", locality: "Henrico" } });
+    expect(record.photos).toHaveLength(2);
+    expect(blobs.has(`estimates/${body.saved.id}/photo-2.jpg`)).toBe(true);
+  });
+
+  it("still returns the analysis if saving fails", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "test";
+    blobModule.put.mockRejectedValueOnce(new Error("store down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    parse.mockResolvedValue({ stop_reason: "end_turn", parsed_output: SAMPLE_JOBS[0].assessment, model: "claude-opus-5-5", usage: { input_tokens: 1, output_tokens: 1 } });
+    const res = await POST(request());
+    delete process.env.BLOB_READ_WRITE_TOKEN;
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.assessment).toBeDefined();
+    expect(body.saved.error).toBeDefined();
   });
 
   it("handles refusals and unreadable output", async () => {

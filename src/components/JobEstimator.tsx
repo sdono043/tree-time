@@ -14,6 +14,8 @@ import {
 } from "@/lib/job-estimator";
 import { SAMPLE_JOBS } from "@/lib/sample-jobs";
 import { usd } from "@/lib/format";
+import { EMPTY_CUSTOMER, type Customer, type EstimateRecord } from "@/lib/estimate-record";
+import { gmFetch, gmPhotoUrl, loadAccessCode, rememberAccessCode } from "@/lib/gm-client";
 
 interface Photo {
   id: string;
@@ -24,7 +26,6 @@ interface Photo {
 
 const MAX_PHOTOS = 6;
 const MAX_EDGE = 1568; // larger images are downscaled by the API anyway
-const CODE_KEY = "rtc-gm-access-code";
 
 /** Downscale to a JPEG so several phone photos fit in one request. */
 async function shrink(file: File): Promise<File> {
@@ -148,17 +149,62 @@ export function JobEstimator() {
   const [job, setJob] = useState<JobAssessment | null>(null);
   const [source, setSource] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedPhotoUrls, setSavedPhotoUrls] = useState<string[]>([]);
+  const [save, setSave] = useState<{ kind: "idle" | "saving" | "saved" | "error"; message?: string }>({ kind: "idle" });
   const photosRef = useRef(photos);
   photosRef.current = photos;
+  const savedPhotosRef = useRef(savedPhotoUrls);
+  savedPhotosRef.current = savedPhotoUrls;
 
   useEffect(() => {
-    try {
-      setAccessCode(window.sessionStorage.getItem(CODE_KEY) ?? "");
-    } catch {
-      // storage blocked; the code just isn't remembered
-    }
-    return () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
+    const code = loadAccessCode();
+    setAccessCode(code);
+    // Opened from the estimate history: load that saved estimate for editing.
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (id) void openSaved(id, code);
+    return () => {
+      photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
+      savedPhotosRef.current.forEach((u) => URL.revokeObjectURL(u));
+    };
   }, []);
+
+  async function openSaved(id: string, code: string) {
+    setStatus({ kind: "working", message: "Loading saved estimate…" });
+    try {
+      const { estimate: r } = await gmFetch<{ estimate: EstimateRecord }>(`/api/estimates/${id}`, code);
+      setOptions(r.options);
+      setCustomer(r.customer);
+      setNotes(r.notes);
+      setOriginal(r.aiAssessment);
+      setJob(structuredClone(r.assessment));
+      setSource(`Saved estimate from ${new Date(r.createdAt).toLocaleString()}.`);
+      setSavedId(r.id);
+      setSave({ kind: "saved", message: "Loaded" });
+      setStatus({ kind: "idle" });
+      const urls = await Promise.all(r.photos.map((_, i) => gmPhotoUrl(`/api/estimates/${r.id}/photos/${i + 1}`, code)));
+      setSavedPhotoUrls(urls.filter((u): u is string => u !== null));
+    } catch (e) {
+      setStatus({ kind: "error", message: e instanceof Error ? e.message : "Couldn't load that estimate." });
+    }
+  }
+
+  async function saveChanges() {
+    if (!savedId || !job) return;
+    setSave({ kind: "saving" });
+    rememberAccessCode(accessCode);
+    try {
+      await gmFetch(`/api/estimates/${savedId}`, accessCode, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer, notes, options, assessment: job }),
+      });
+      setSave({ kind: "saved", message: `Saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` });
+    } catch (e) {
+      setSave({ kind: "error", message: e instanceof Error ? e.message : "Save failed." });
+    }
+  }
 
   const estimate = useMemo(() => (job && job.trees.length ? estimateJob(job, options) : null), [job, options]);
   const setOpt = <K extends keyof JobOptions>(k: K, v: JobOptions[K]) => setOptions((o) => ({ ...o, [k]: v }));
@@ -197,20 +243,19 @@ export function JobEstimator() {
     const s = SAMPLE_JOBS.find((x) => x.id === id)!;
     setOptions({ ...DEFAULT_OPTIONS, ...s.options });
     load(s.assessment, `Sample job: ${s.title}. ${s.photoNote}`);
+    setSavedId(null);
+    setSave({ kind: "idle" });
     setStatus({ kind: "idle" });
   }
 
   async function analyze() {
     setStatus({ kind: "working" });
-    try {
-      window.sessionStorage.setItem(CODE_KEY, accessCode);
-    } catch {
-      // not remembered; fine
-    }
+    rememberAccessCode(accessCode);
     try {
       const form = new FormData();
       for (const p of photos) form.append("photos", await shrink(p.file));
-      form.append("service", options.service);
+      form.append("options", JSON.stringify(options));
+      form.append("customer", JSON.stringify(customer));
       form.append("notes", notes);
       const started = Date.now();
       const res = await fetch("/api/assess", { method: "POST", body: form, headers: { "x-gm-access-code": accessCode } });
@@ -221,6 +266,13 @@ export function JobEstimator() {
       }
       load(body.assessment, `AI read of ${photos.length} photo${photos.length > 1 ? "s" : ""} in ${Math.round((Date.now() - started) / 1000)}s.`);
       setStatus({ kind: "done" });
+      if (body.saved?.id) {
+        setSavedId(body.saved.id);
+        setSave({ kind: "saved", message: "Saved to estimate history" });
+      } else {
+        setSavedId(null);
+        setSave(body.saved?.error ? { kind: "error", message: body.saved.error } : { kind: "idle" });
+      }
     } catch {
       setStatus({ kind: "error", message: "Couldn't reach the server. Check the connection and try again." });
     }
@@ -263,6 +315,12 @@ export function JobEstimator() {
               <p className="text-xs text-muted mt-0.5">Best results: one wide shot showing the whole tree with the house or a person for scale, one of what&apos;s under it, one from where a truck would park.</p>
             </div>
             <div className="flex flex-wrap gap-3">
+              {savedPhotoUrls.map((u, i) => (
+                <div key={u} className="size-24 overflow-hidden rounded-lg border border-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- private photo loaded as an object URL */}
+                  <img src={u} alt={`Saved photo ${i + 1}`} className="size-full object-cover" />
+                </div>
+              ))}
               {photos.map((p) => (
                 <div key={p.id} className="relative size-24 overflow-hidden rounded-lg border border-line">
                   {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
@@ -278,6 +336,27 @@ export function JobEstimator() {
                 </label>
               )}
             </div>
+            <fieldset className="grid gap-3 sm:grid-cols-2">
+              <legend className="mb-2 text-sm font-medium">Customer</legend>
+              {(
+                [
+                  ["name", "Name", "name"],
+                  ["phone", "Phone", "tel"],
+                  ["email", "Email", "email"],
+                  ["address", "Job address", "street-address"],
+                ] as const
+              ).map(([k, label, auto]) => (
+                <label key={k} className="block text-sm">
+                  <span className="text-ink-2">{label}</span>
+                  <input
+                    value={customer[k]}
+                    onChange={(e) => setCustomer((c) => ({ ...c, [k]: e.target.value }))}
+                    autoComplete={auto}
+                    className="mt-1 w-full rounded-md border border-line bg-bg px-3 py-1.5"
+                  />
+                </label>
+              ))}
+            </fieldset>
             <label className="block text-sm">
               <span className="text-ink-2">Notes for the estimator (optional)</span>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="e.g. Customer says the gate is 4 ft wide; wants the wood left for firewood" className="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2" />
@@ -305,7 +384,7 @@ export function JobEstimator() {
               disabled={photos.length === 0 || status.kind === "working"}
               className="w-full rounded-lg bg-brand px-4 py-2.5 font-medium text-on-brand hover:bg-brand-strong disabled:opacity-50"
             >
-              {status.kind === "working" ? "Analyzing photos… (up to a minute)" : "Analyze photos"}
+              {status.kind === "working" ? status.message ?? "Analyzing photos… (up to a minute)" : "Analyze photos"}
             </button>
           </div>
         </div>
@@ -433,6 +512,26 @@ export function JobEstimator() {
                   ))}
                 </tbody>
               </table>
+
+              <div className="rounded-lg border border-line p-3 text-sm space-y-2">
+                {savedId ? (
+                  <>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={save.kind === "error" ? "text-bad" : "text-ink-2"} role="status">
+                        {save.kind === "saving" ? "Saving…" : save.message ?? "Saved"}
+                      </span>
+                      <a href={`/estimates/${savedId}`} className="text-xs underline text-muted">Open in history</a>
+                    </div>
+                    <button type="button" onClick={saveChanges} disabled={save.kind === "saving"} className="w-full rounded-lg bg-brand px-4 py-2 font-medium text-on-brand hover:bg-brand-strong disabled:opacity-50">
+                      Save changes
+                    </button>
+                  </>
+                ) : save.kind === "error" ? (
+                  <p className="text-bad" role="status">{save.message}</p>
+                ) : (
+                  <p className="text-muted">{source.startsWith("Sample") ? "Sample jobs aren't saved." : "Not saved: estimate history isn't set up on this deployment."}</p>
+                )}
+              </div>
 
               <button
                 type="button"
