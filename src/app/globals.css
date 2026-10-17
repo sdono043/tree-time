@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #f6f5f1;
+  --surface: #fcfcfb;
+  --surface-2: #efede6;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #7a7873;
+  --line: #e2dfd6;
+  --brand: #1f5f3a;
+  --brand-strong: #164a2c;
+  --brand-soft: #e3efe6;
+  --on-brand: #ffffff;
+  --warn: #9a5b00;
+  --warn-soft: #fbefd9;
+  --bad: #b42318;
+  --good: #1a7f37;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --grid: #e6e4dd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #9a998f;
+    --line: #33332f;
+    --brand: #4fa771;
+    --brand-strong: #6cc08c;
+    --brand-soft: #1d3326;
+    --on-brand: #0b130e;
+    --warn: #e0a440;
+    --warn-soft: #33270f;
+    --bad: #f07167;
+    --good: #5cc27a;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --grid: #2b2b28;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #9a998f;
+  --line: #33332f;
+  --brand: #4fa771;
+  --brand-strong: #6cc08c;
+  --brand-soft: #1d3326;
+  --on-brand: #0b130e;
+  --warn: #e0a440;
+  --warn-soft: #33270f;
+  --bad: #f07167;
+  --good: #5cc27a;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --grid: #2b2b28;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-good: var(--good);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,142 @@
+{
+  "_note": "Source of truth for the owner dashboard. All figures are industry benchmarks from the planning chat, not Richmond quotes. Replace with real quotes (GL / workers' comp premiums and rental rates move the model most).",
+  "meta": {
+    "company": "Richmond Tree Care Co.",
+    "market": "Richmond, VA metro (Richmond, Henrico, Chesterfield)",
+    "modelStart": "2027-01",
+    "version": "deck-v1"
+  },
+  "capital": {
+    "raise": 150000,
+    "uses": [
+      {
+        "label": "Ramp working capital",
+        "amount": 110000
+      },
+      {
+        "label": "Insurance down payments (GL, WC, auto, umbrella)",
+        "amount": 12500
+      },
+      {
+        "label": "Rental deposits, saws, rigging, PPE",
+        "amount": 10000
+      },
+      {
+        "label": "Launch marketing, website, signage",
+        "amount": 7500
+      },
+      {
+        "label": "GM recruiting and onboarding",
+        "amount": 4500
+      },
+      {
+        "label": "LLC, DPOR Class C, BPOL, legal",
+        "amount": 3000
+      }
+    ]
+  },
+  "capacity": {
+    "crews": 2,
+    "crewSize": 3,
+    "headcount": 7,
+    "jobsPerMonthAtCapacity": 60,
+    "workdaysPerMonth": 21,
+    "blendedTicketAtCapacity": 900
+  },
+  "monthly": {
+    "jobs": [
+      14,
+      20,
+      26,
+      32,
+      38,
+      42,
+      46,
+      50,
+      53,
+      56,
+      58,
+      60
+    ],
+    "avgTicket": [
+      780,
+      800,
+      820,
+      830,
+      840,
+      850,
+      860,
+      870,
+      880,
+      890,
+      900,
+      900
+    ],
+    "woodResale": [
+      0,
+      100,
+      200,
+      300,
+      350,
+      400,
+      400,
+      450,
+      450,
+      500,
+      500,
+      500
+    ]
+  },
+  "costs": {
+    "fixedMonthly": {
+      "GM salary + burden": 6500,
+      "Crew labor + payroll tax": 18500,
+      "Workers' comp": 3200,
+      "GL, auto, umbrella": 2000,
+      "Truck rental (2)": 3600,
+      "Chipper rental (2)": 3000,
+      "Yard, phone, software, admin": 1000
+    },
+    "variablePerJob": {
+      "Fuel": 35,
+      "Dump / tipping fees": 30,
+      "Stump grinder (pay-per-use)": 25,
+      "Consumables + maintenance": 20
+    },
+    "marketingMonthly": [
+      3500,
+      3500,
+      3000,
+      3000,
+      2500,
+      2500,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000
+    ],
+    "laborRamp": [
+      0.6,
+      0.65,
+      0.7,
+      0.8,
+      0.85,
+      0.9,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "deckTargets": {
+    "year1Revenue": 430000,
+    "year1OperatingCost": 502000,
+    "year1Net": -72000,
+    "breakevenMonth": "8-9",
+    "phase2MonthlyMargin": "8,000-12,000+"
+  }
+}
