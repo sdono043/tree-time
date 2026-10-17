@@ -12,13 +12,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className="antialiased min-h-screen flex flex-col">
         <header className="border-b border-line bg-surface">
-          <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-6">
+          <nav className="mx-auto max-w-6xl px-4 min-h-14 py-2 flex items-center gap-6">
             <Link href="/" className="font-semibold tracking-tight flex items-center gap-2">
               <span aria-hidden className="inline-block size-6 rounded-md bg-brand" />
               Richmond Tree Care
             </Link>
-            <div className="ml-auto flex items-center gap-4 text-sm">
+            <div className="ml-auto flex items-center gap-x-4 gap-y-1 flex-wrap justify-end text-sm">
               <Link href="/quote" className="text-ink-2 hover:text-ink">Instant quote</Link>
+              <Link href="/estimator" className="text-ink-2 hover:text-ink">Job estimator</Link>
               <Link href="/dashboard" className="text-ink-2 hover:text-ink">Owner dashboard</Link>
             </div>
           </nav>
