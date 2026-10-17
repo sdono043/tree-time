@@ -1,75 +1,33 @@
 @import "tailwindcss";
 
+/* Light-only palette drawn from the hero photo: open sky, fresh leaves, meadow. */
 :root {
   color-scheme: light;
-  --bg: #f6f5f1;
-  --surface: #fcfcfb;
-  --surface-2: #efede6;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #7a7873;
-  --line: #e2dfd6;
-  --brand: #1f5f3a;
-  --brand-strong: #164a2c;
-  --brand-soft: #e3efe6;
+  --bg: #f6faf3;
+  --sky: #e6f1fa;
+  --surface: #ffffff;
+  --surface-2: #eef5ea;
+  --ink: #12241a;
+  --ink-2: #435648;
+  --muted: #6b7d70;
+  --line: #dce7d6;
+  --brand: #2e7a3c;
+  --brand-strong: #235f2e;
+  --brand-soft: #e3f1dc;
+  --leaf: #7fb648;
   --on-brand: #ffffff;
-  --warn: #9a5b00;
-  --warn-soft: #fbefd9;
+  --warn: #8a5300;
+  --warn-soft: #fcf1dc;
   --bad: #b42318;
-  --good: #1a7f37;
+  --good: #1f7a35;
   --series-1: #2a78d6;
   --series-2: #eb6834;
-  --grid: #e6e4dd;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #121211;
-    --surface: #1a1a19;
-    --surface-2: #232321;
-    --ink: #f0efec;
-    --ink-2: #c3c2b7;
-    --muted: #9a998f;
-    --line: #33332f;
-    --brand: #4fa771;
-    --brand-strong: #6cc08c;
-    --brand-soft: #1d3326;
-    --on-brand: #0b130e;
-    --warn: #e0a440;
-    --warn-soft: #33270f;
-    --bad: #f07167;
-    --good: #5cc27a;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --grid: #2b2b28;
-  }
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #121211;
-  --surface: #1a1a19;
-  --surface-2: #232321;
-  --ink: #f0efec;
-  --ink-2: #c3c2b7;
-  --muted: #9a998f;
-  --line: #33332f;
-  --brand: #4fa771;
-  --brand-strong: #6cc08c;
-  --brand-soft: #1d3326;
-  --on-brand: #0b130e;
-  --warn: #e0a440;
-  --warn-soft: #33270f;
-  --bad: #f07167;
-  --good: #5cc27a;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --grid: #2b2b28;
+  --grid: #e3ebdf;
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-sky: var(--sky);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
@@ -79,18 +37,26 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
+  --color-leaf: var(--leaf);
   --color-on-brand: var(--on-brand);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-bad: var(--bad);
   --color-good: var(--good);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-  background: var(--bg);
+  /* Sky fading into meadow-light green, like the photo. */
+  background: linear-gradient(180deg, var(--sky) 0, var(--bg) 480px) no-repeat, var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
 }
 
 .tabular {
