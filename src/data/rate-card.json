@@ -1,5 +1,5 @@
 {
-  "_note": "Cost inputs for the job estimator. Industry benchmarks, not Richmond quotes; replace with real payroll, rental and dump-fee numbers. Labor rates are loaded (wages + payroll tax + workers' comp).",
+  "_note": "Cost inputs for the job estimator. Industry benchmarks, not Richmond quotes; replace with real payroll, rental and dump-fee numbers. Labor rates are loaded (wages + payroll tax + workers' comp). Bucket truck, loader and traffic control are retail day rates; see the equipment schedule in financial-model.json.",
   "labor": {
     "climberPerHour": 42,
     "groundPerHour": 28,
@@ -8,13 +8,15 @@
   "equipment": {
     "crewTruckPerDay": 85,
     "chipperPerDay": 75,
-    "bucketTruckPerDay": 450,
+    "bucketTruckPerDay": 550,
     "cranePerHalfDay": 1600,
     "craneExtraHour": 325,
-    "miniLoaderPerDay": 350,
+    "miniLoaderPerDay": 375,
     "stumpGrinderPerHour": 60,
     "stumpGrinderMinimumHours": 1,
-    "riggingWearPerJob": 40
+    "riggingWearPerJob": 40,
+    "trafficControlPerDay": 300,
+    "rightOfWayPermit": 150
   },
   "disposal": {
     "perLoad": 65,
@@ -30,7 +32,12 @@
   },
   "productivity": {
     "crewHoursPerDay": 8,
-    "removalHoursByHeight": { "small": 1.5, "medium": 3.5, "large": 6.5, "xl": 11 },
+    "removalHoursByHeight": {
+      "small": 1.5,
+      "medium": 3.5,
+      "large": 6.5,
+      "xl": 11
+    },
     "trimFractionOfRemoval": 0.55,
     "stumpGrindMinutesPerInch": 2.5
   }
