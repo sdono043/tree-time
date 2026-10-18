@@ -17,7 +17,7 @@ export default function QuotePage() {
         <div className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
           <h1 className="text-4xl font-extrabold">Instant estimate</h1>
           <p className="mt-3 max-w-xl text-lg text-ink-2">
-            Tell us about the tree and see a price range right away. Most estimates are confirmed from photos, without a site visit.
+            Tell us about the tree and see a price range right away. Request a firm quote and we call within one business day. Nothing is scheduled until you approve the price.
           </p>
         </div>
       </section>

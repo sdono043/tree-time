@@ -238,6 +238,10 @@ export function estimateJob(job: JobAssessment, opts: JobOptions): JobEstimate {
       high: loads(ydHigh) * R.disposal.perLoad,
     });
   }
+  if (job.nearRoadway && service !== "stump") {
+    const tc = R.equipment.trafficControlPerDay * days + R.equipment.rightOfWayPermit;
+    lines.push({ group: "Other", label: "Traffic control and right-of-way permit", low: tc, high: tc });
+  }
   lines.push({ group: "Other", label: "Mobilization and travel", low: R.travel.mobilizationPerJob, high: R.travel.mobilizationPerJob });
 
   // --- Totals ----------------------------------------------------------------

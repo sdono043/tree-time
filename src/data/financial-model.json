@@ -93,14 +93,11 @@
       "Crew labor + payroll tax": 18500,
       "Workers' comp": 3200,
       "GL, auto, umbrella": 2000,
-      "Truck rental (2)": 3600,
-      "Chipper rental (2)": 3000,
       "Yard, phone, software, admin": 1000
     },
     "variablePerJob": {
       "Fuel": 35,
       "Dump / tipping fees": 30,
-      "Stump grinder (pay-per-use)": 25,
       "Consumables + maintenance": 20
     },
     "marketingMonthly": [
@@ -138,5 +135,151 @@
     "year1Net": -72000,
     "breakevenMonth": "8-9",
     "phase2MonthlyMargin": "8,000-12,000+"
+  },
+  "equipment": {
+    "_note": "Benchmarks, not Richmond quotes. Rental rates are retail (Sunbelt / United / local dealers), before delivery. Purchase prices are used-market ranges from auction and dealer listings; financing assumes a typical equipment loan. Fleet items run every month once a crew needs them; per-use items are rented by the day only on the jobs that need them, up to the monthly rate. Cranes are subcontracted with an operator and billed through to the customer, so they're not modeled here.",
+    "defaultStrategy": "finance",
+    "rentalDamageWaiverPct": 0.12,
+    "financing": {
+      "aprPct": 0.095,
+      "termMonths": 60,
+      "downPaymentPct": 0.15
+    },
+    "items": [
+      {
+        "id": "chip-truck",
+        "name": "Chip truck (16 ft dump body)",
+        "use": "fleet",
+        "unitStartMonths": [
+          1,
+          4
+        ],
+        "rent": {
+          "daily": 300,
+          "monthly": 2800
+        },
+        "buyUsed": [
+          40000,
+          75000
+        ],
+        "buyNew": [
+          110000,
+          150000
+        ],
+        "maintenancePctPerYear": 0.08
+      },
+      {
+        "id": "chipper",
+        "name": "12 in drum chipper",
+        "use": "fleet",
+        "unitStartMonths": [
+          1,
+          4
+        ],
+        "rent": {
+          "daily": 350,
+          "monthly": 3200
+        },
+        "buyUsed": [
+          25000,
+          45000
+        ],
+        "buyNew": [
+          55000,
+          75000
+        ],
+        "maintenancePctPerYear": 0.1
+      },
+      {
+        "id": "bucket-truck",
+        "name": "60–75 ft forestry bucket truck",
+        "use": "per-use",
+        "unitStartMonths": [
+          1
+        ],
+        "rent": {
+          "daily": 550,
+          "monthly": 5500
+        },
+        "buyUsed": [
+          45000,
+          95000
+        ],
+        "buyNew": [
+          180000,
+          250000
+        ],
+        "maintenancePctPerYear": 0.1,
+        "perUse": {
+          "shareOfJobs": 0.25,
+          "jobsPerDay": 1.5
+        }
+      },
+      {
+        "id": "stump-grinder",
+        "name": "Self-propelled stump grinder",
+        "use": "per-use",
+        "unitStartMonths": [
+          1
+        ],
+        "rent": {
+          "daily": 325,
+          "monthly": 2800
+        },
+        "buyUsed": [
+          15000,
+          30000
+        ],
+        "buyNew": [
+          35000,
+          60000
+        ],
+        "maintenancePctPerYear": 0.12,
+        "perUse": {
+          "shareOfJobs": 0.35,
+          "jobsPerDay": 3
+        }
+      },
+      {
+        "id": "compact-loader",
+        "name": "Compact track loader (mini skid steer)",
+        "use": "per-use",
+        "unitStartMonths": [
+          1
+        ],
+        "rent": {
+          "daily": 375,
+          "monthly": 3000
+        },
+        "buyUsed": [
+          18000,
+          32000
+        ],
+        "buyNew": [
+          40000,
+          55000
+        ],
+        "maintenancePctPerYear": 0.08,
+        "perUse": {
+          "shareOfJobs": 0.1,
+          "jobsPerDay": 1.5
+        }
+      }
+    ],
+    "strategies": {
+      "rent": {
+        "label": "Rent everything",
+        "finance": []
+      },
+      "finance": {
+        "label": "Finance used core fleet",
+        "finance": [
+          "chip-truck",
+          "chipper",
+          "bucket-truck",
+          "stump-grinder"
+        ]
+      }
+    }
   }
 }

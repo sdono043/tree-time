@@ -12,6 +12,8 @@ export interface Lead {
   name: string;
   neighborhood: string;
   service: Service;
+  /** Every service requested, when there's more than one. */
+  services?: Service[];
   source: LeadSource;
   quoteLow: number;
   quoteHigh: number;
