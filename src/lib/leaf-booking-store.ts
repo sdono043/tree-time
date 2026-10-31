@@ -50,7 +50,7 @@ export async function saveBooking(booking: LeafBooking): Promise<void> {
 }
 
 export async function listBookingsForDate(date: string): Promise<LeafBooking[]> {
-  const { blobs } = await list({ prefix: ROOT, mode: "expanded", access: "private" });
+  const { blobs } = await list({ prefix: ROOT, mode: "expanded" });
   const results: LeafBooking[] = [];
   await Promise.all(
     blobs.map(async (b) => {
