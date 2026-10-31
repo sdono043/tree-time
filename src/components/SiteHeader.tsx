@@ -36,6 +36,7 @@ export function SiteHeader() {
         ) : (
           <div className="ml-auto flex items-center gap-4 text-sm">
             <Link href="/#services" className="hidden text-ink-2 hover:text-ink sm:inline">Services</Link>
+            <Link href="/leaf-pickup" className={`hidden sm:inline ${path.startsWith("/leaf-pickup") ? "font-medium text-brand-strong" : "text-ink-2 hover:text-ink"}`}>Leaf pickup</Link>
             <a href="tel:+18045550100" className="hidden text-ink-2 hover:text-ink sm:inline">(804) 555-0100</a>
             <Link href="/quote" className="rounded-full bg-brand px-4 py-2 font-medium text-on-brand hover:bg-brand-strong">Instant estimate</Link>
           </div>
